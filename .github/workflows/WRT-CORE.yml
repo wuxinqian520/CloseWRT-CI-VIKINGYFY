@@ -47,6 +47,10 @@ on:
         required: false
         type: boolean
         default: false
+      WRT_USB:
+        required: false
+        type: boolean
+        default: false
       WRT_MMC:
         required: false
         type: boolean
@@ -71,6 +75,7 @@ env:
   WRT_SOURCE: ${{inputs.WRT_SOURCE}}
   WRT_PACKAGE: ${{inputs.WRT_PACKAGE}}
   WRT_GFW: ${{inputs.WRT_GFW}}
+  WRT_USB: ${{inputs.WRT_USB}}
   WRT_MMC: ${{inputs.WRT_MMC}}
   WRT_TEST: ${{inputs.WRT_TEST}}
 
@@ -108,6 +113,7 @@ jobs:
           fi
 
           WRT_GFW=$(echo "${WRT_GFW:-false}" | tr '[:upper:]' '[:lower:]')
+          WRT_USB=$(echo "${WRT_USB:-false}" | tr '[:upper:]' '[:lower:]')
           WRT_MMC=$(echo "${WRT_MMC:-false}" | tr '[:upper:]' '[:lower:]')
           WRT_TEST=$(echo "${WRT_TEST:-false}" | tr '[:upper:]' '[:lower:]')
 
@@ -118,6 +124,7 @@ jobs:
 
           echo "WRT_CONFIG_FILE=$WRT_CONFIG_FILE" >> $GITHUB_ENV
           echo "WRT_GFW=$WRT_GFW" >> $GITHUB_ENV
+          echo "WRT_USB=$WRT_USB" >> $GITHUB_ENV
           echo "WRT_MMC=$WRT_MMC" >> $GITHUB_ENV
           echo "WRT_TEST=$WRT_TEST" >> $GITHUB_ENV
           echo "WRT_DATE=$(TZ=UTC-8 date +"%y.%m.%d-%H.%M.%S")" >> $GITHUB_ENV
@@ -211,6 +218,11 @@ jobs:
             echo "Custom gfw packages added!"
           fi
 
+          if is_true "$WRT_USB" || is_true "$WRT_MMC"; then
+            $GITHUB_WORKSPACE/Scripts/Disk.sh
+            echo "Custom disk packages added!"
+          fi
+
           $GITHUB_WORKSPACE/Scripts/Handles.sh
 
       - name: Custom Settings
@@ -235,12 +247,17 @@ jobs:
           echo "WRT_GFW=$WRT_GFW"
 
           if is_true "$WRT_GFW"; then
-            echo "Checking luci-app-passwall availability in feeds..."
-            ./scripts/feeds search luci-app-passwall || true
+            echo "Checking luci-app-homeproxy availability in feeds..."
+            ./scripts/feeds search luci-app-homeproxy || true
           fi
 
           if is_true "$WRT_GFW"; then
-            printf '\nCONFIG_PACKAGE_luci-app-passwall\n' >> .config
+            printf '\nCONFIG_PACKAGE_luci-app-homeproxy=y\n' >> .config
+          fi
+
+          if is_true "$WRT_USB"; then
+            cat $GITHUB_WORKSPACE/Config/USB.txt >> .config
+            ADD_DISK_CONFIG=true
           fi
 
           if is_true "$WRT_MMC"; then
@@ -250,6 +267,69 @@ jobs:
 
           if [[ "$ADD_DISK_CONFIG" == "true" ]]; then
             cat $GITHUB_WORKSPACE/Config/DISK.txt >> .config
+          fi
+
+          echo "homeproxy config (before Settings.sh):"
+          grep -n "CONFIG_PACKAGE_luci-app-homeproxy" .config || true
+
+          $GITHUB_WORKSPACE/Scripts/Settings.sh
+
+          echo "homeproxy config (after Settings.sh, before defconfig):"
+          grep -n "CONFIG_PACKAGE_luci-app-homeproxy" .config || true
+
+          make defconfig -j$(nproc) && make clean -j$(nproc)
+
+          echo "homeproxy config (after defconfig):"
+          grep -n "CONFIG_PACKAGE_luci-app-homeproxy" .config || true
+
+      - name: Download Packages
+        if: env.WRT_TEST != 'true'
+        run: |
+          cd ./wrt/
+
+          make download -j$(nproc)
+
+      - name: Compile Firmware
+        if: env.WRT_TEST != 'true'
+        run: |
+          cd ./wrt/
+
+          make -j$(nproc) || make -j1 V=s
+
+      - name: Machine Information
+        run: |
+          cd ./wrt/
+
+          echo "======================="
+          lscpu | grep -E "name|Core|Thread"
+          echo "======================="
+          df -h
+          echo "======================="
+          du -h --max-depth=1
+          echo "======================="
+
+      - name: Package Firmware
+        run: |
+          cd ./wrt/ && mkdir ./upload/
+
+          cp -f ./.config ./upload/Config-"$WRT_CONFIG"-"$WRT_INFO"-"$WRT_BRANCH"-"$WRT_DATE".txt
+
+          if [[ $WRT_TEST != 'true' ]]; then
+            echo "WRT_KVER=$(find ./bin/targets/ -type f -name "*.manifest" -exec grep -oP '^kernel - \K[\d\.]+' {} \;)" >> $GITHUB_ENV
+            echo "WRT_LIST=$(find ./bin/targets/ -type f -name "*.manifest" -exec grep -oP '^luci-(app|theme)[^ ]*' {} \; | tr '\n' ' ')" >> $GITHUB_ENV
+
+            find ./bin/targets/ -iregex ".*\(buildinfo\|json\|sha256sums\|packages\)$" -exec rm -rf {} +
+
+            for FILE in $(find ./bin/targets/ -type f -iname "*$WRT_TARGET*") ; do
+              EXT=$(basename $FILE | cut -d '.' -f 2-)
+              NAME=$(basename $FILE | cut -d '.' -f 1 | grep -io "\($WRT_TARGET\).*")
+              NEW_FILE="$WRT_INFO"-"$WRT_BRANCH"-"$WRT_WIFI"-"$NAME"-"$WRT_DATE"."$EXT"
+              mv -f $FILE ./upload/$NEW_FILE
+            done
+
+            find ./bin/targets/ -type f -exec mv -f {} ./upload/ \;
+
+            make clean -j$(nproc)
           fi
 
       - name: Release Firmware
