@@ -113,8 +113,6 @@ jobs:
       WRT_PACKAGE: ${{inputs.PACKAGE}}
       #GFW开关
       WRT_GFW: ${{inputs.GFW}}
-      #USB 选项
-      WRT_USB: ${{inputs.USB}}
       #MMC 开关
       WRT_MMC: ${{inputs.MMC}}
       #仅输出配置文件
