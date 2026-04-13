@@ -15,6 +15,7 @@ on:
         type: choice
         options:
           - MT7981
+          - MT7986
           - TEST
       SOURCE:
         default: 'Yuzhii0718/immortalwrt-mt798x-6.6-padavanonly'
@@ -32,6 +33,11 @@ on:
         type: string
       GFW:
         description: 'GFW 开关'
+        default: true
+        required: true
+        type: boolean
+      USB:
+        description: 'USB 开关'
         default: true
         required: true
         type: boolean
@@ -85,6 +91,8 @@ jobs:
       WRT_PACKAGE: ${{inputs.PACKAGE}}
       #GFW 开关
       WRT_GFW: ${{inputs.GFW}}
+      #USB 选项
+      WRT_USB: ${{inputs.USB}}
       #MMC 开关
       WRT_MMC: ${{inputs.MMC}}
       #仅输出配置文件
