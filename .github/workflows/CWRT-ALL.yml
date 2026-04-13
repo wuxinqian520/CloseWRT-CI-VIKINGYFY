@@ -32,17 +32,8 @@ on:
         default: true
         required: true
         type: boolean
-      MT7986_BUILD:
-        description: '编译 MT7986 平台'
-        default: true
-        required: true
-        type: boolean
       MT7981_CONFIG:
         description: 'MT7981 自定义配置文件名（Config 目录下，不填默认 MT7981.txt）'
-        required: false
-        type: string
-      MT7986_CONFIG:
-        description: 'MT7986 自定义配置文件名（Config 目录下，不填默认 MT7986.txt）'
         required: false
         type: string
       PACKAGE:
@@ -91,44 +82,6 @@ jobs:
       WRT_CONFIG: MT7981
       #编译配置文件（可自定义）
       WRT_CONFIG_FILE: ${{ inputs.MT7981_CONFIG != '' && inputs.MT7981_CONFIG || 'MT7981.txt' }}
-      #默认主题
-      WRT_THEME: aurora
-      #默认主机名
-      WRT_NAME: CWRT
-      #默认WIFI名称
-      WRT_SSID: CWRT
-      #默认WIFI密码
-      WRT_WORD: 12345678
-      #默认地址
-      WRT_IP: 192.168.10.1
-      #默认密码，仅作提示，修改无用
-      WRT_PW: 无
-      #源码链接
-      WRT_REPO: https://github.com/Yuzhii0718/immortalwrt-mt798x-6.6-padavanonly.git
-      #源码分支
-      WRT_BRANCH: openwrt-24.10-6.6
-      #源码名称
-      WRT_SOURCE: Yuzhii0718/immortalwrt-mt798x-6.6-padavanonly
-      #插件调整
-      WRT_PACKAGE: ${{inputs.PACKAGE}}
-      #GFW开关
-      WRT_GFW: ${{inputs.GFW}}
-      #USB 选项
-      WRT_USB: ${{inputs.USB}}
-      #MMC 开关
-      WRT_MMC: ${{inputs.MMC}}
-      #仅输出配置文件
-      WRT_TEST: ${{inputs.TEST}}
-
-  config-mt7986:
-    if: ${{ inputs.MT7986_BUILD }}
-    name: MT7986
-    uses: ./.github/workflows/WRT-CORE.yml
-    with:
-      #编译配置
-      WRT_CONFIG: MT7986
-      #编译配置文件（可自定义）
-      WRT_CONFIG_FILE: ${{ inputs.MT7986_CONFIG != '' && inputs.MT7986_CONFIG || 'MT7986.txt' }}
       #默认主题
       WRT_THEME: aurora
       #默认主机名
