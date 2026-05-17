@@ -36,11 +36,6 @@ on:
         default: true
         required: true
         type: boolean
-      USB:
-        description: 'USB 开关'
-        default: true
-        required: true
-        type: boolean
       MMC:
         description: 'MMC 开关'
         default: true
