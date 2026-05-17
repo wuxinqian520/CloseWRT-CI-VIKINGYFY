@@ -1,5 +1,4 @@
 #依赖-DISK
-CONFIG_PACKAGE_luci-app-partexp=y
 
 CONFIG_PACKAGE_blkid=y
 CONFIG_PACKAGE_cfdisk=y
