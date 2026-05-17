@@ -1,4 +1,8 @@
 #增加插件
+CONFIG_PACKAGE_luci-theme-Bootstrap
+CONFIG_PACKAGE_luci-theme-Argon=y
+CONFIG_PACKAGE_luci-theme-design=y
+CONFIG_PACKAGE_luci-theme-edge=y
 
 #删除插件
 CONFIG_PACKAGE_luci-app-homeproxy=n
