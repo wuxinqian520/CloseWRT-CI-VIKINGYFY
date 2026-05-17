@@ -47,10 +47,6 @@ on:
         required: false
         type: boolean
         default: false
-      WRT_USB:
-        required: false
-        type: boolean
-        default: false
       WRT_MMC:
         required: false
         type: boolean
@@ -75,7 +71,6 @@ env:
   WRT_SOURCE: ${{inputs.WRT_SOURCE}}
   WRT_PACKAGE: ${{inputs.WRT_PACKAGE}}
   WRT_GFW: ${{inputs.WRT_GFW}}
-  WRT_USB: ${{inputs.WRT_USB}}
   WRT_MMC: ${{inputs.WRT_MMC}}
   WRT_TEST: ${{inputs.WRT_TEST}}
 
@@ -124,7 +119,6 @@ jobs:
 
           echo "WRT_CONFIG_FILE=$WRT_CONFIG_FILE" >> $GITHUB_ENV
           echo "WRT_GFW=$WRT_GFW" >> $GITHUB_ENV
-          echo "WRT_USB=$WRT_USB" >> $GITHUB_ENV
           echo "WRT_MMC=$WRT_MMC" >> $GITHUB_ENV
           echo "WRT_TEST=$WRT_TEST" >> $GITHUB_ENV
           echo "WRT_DATE=$(TZ=UTC-8 date +"%y.%m.%d-%H.%M.%S")" >> $GITHUB_ENV
